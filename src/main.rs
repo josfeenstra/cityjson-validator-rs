@@ -4,8 +4,8 @@ use cityjson_validator;
 fn main() {
     let args: Vec<String> = env::args().collect();
     let config = Config::from_three(&args).expect("couldn't parse");
-    println!("args: {:?}", config);
-    println!("Comparing a json to a json schema:");
+    // println!("args: {:?}", config);
+    println!("Preparing to test a cityjson...");
     run(config);
     println!("Done, have a nice day!");
 }
