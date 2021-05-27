@@ -1,5 +1,5 @@
 use std::{env, fs};
-use dry_cityjson_validator::CityJsonValidator;
+use cityjson_validator;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -11,15 +11,13 @@ fn main() {
 }
 
 fn run(config: Config) {
-
-    // NOTE: for this first attempt, I will just give the entire string to the validator
     let json = fs::read_to_string(config.json_path)
         .expect("couldn't read json");
     let schema = fs::read_to_string(config.schema_path)
         .expect("coudn't read schema");
 
-    let validator = CityJsonValidator::from_strings(schema.as_str(), json.as_str());
-    validator.validate();
+    let validator = cityjson_validator::CityJsonValidator::from_strings(schema.as_str());
+    validator.validate_from_str(json.as_str());
 }
 
 

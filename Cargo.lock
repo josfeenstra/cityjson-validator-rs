@@ -111,6 +111,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "cityjson-validator"
+version = "0.1.0"
+dependencies = [
+ "jsonschema",
+ "serde_json",
+]
+
+[[package]]
 name = "clap"
 version = "2.33.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -140,14 +148,6 @@ name = "core-foundation-sys"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ea221b5284a47e40033bf9b66f35f984ec0ea2931eb03505246cd27a963f981b"
-
-[[package]]
-name = "dry-cityjson-validator"
-version = "0.1.0"
-dependencies = [
- "jsonschema",
- "serde_json",
-]
 
 [[package]]
 name = "encoding_rs"
