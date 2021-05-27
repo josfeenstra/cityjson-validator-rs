@@ -1,4 +1,4 @@
-## dry-cityjson-validator 
+# dry-cityjson-validator 
 
 A pure rust implementation of a (city) json validator.
 
@@ -13,9 +13,9 @@ A pure rust implementation of a (city) json validator.
 - I am very new to rust, so i'm trying to do this 'by the book' as much as possible.
 
 
-# run 
+## run 
 ```
 
-validator.exe [absolute path to schema] [absolute path to cityjson file] 
+validator.exe [absolute path to schema] [absolute path to cityjson file]
 
 ```
