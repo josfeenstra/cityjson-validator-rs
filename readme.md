@@ -1,4 +1,4 @@
-# dry-cityjson-validator 
+## dry-cityjson-validator 
 
 A pure rust implementation of a (city) json validator.
 
@@ -7,10 +7,10 @@ A pure rust implementation of a (city) json validator.
 
 
 
-# considerations
+## considerations
 
-- Code should be able to run from wasm, and 'on dry land' using the normal cli.
-- Lets do this formally, like the rust book tells us!
+- Code should be able to run both from wasm, and 'on dry land' using the normal cli.
+- I am very new to rust, so i'm trying to do this 'by the book' as much as possible.
 
 
 # run 
