@@ -1,21 +1,41 @@
 # cityjson-validator-rs 
 
-A pure rust implementation of a (city) json validator.
+A cli tool which validates a cityjson file according to a schema, and certain other properties
 
-# build 
+
+# properties the validator tests againts
+- [X] json schema
+- [X] Duplicate vertices
+- [ ] Duplicate names (hashes)
+- [ ] Proper building hierarchies
+- [ ] ...
+
+# Install 
+
 ```
+git clone https://github.com/josfeenstra/cityjson-validator-rs
+cd cityjson-validator-rs
 cargo build
 ```
-or
+
+
+# Local usage 
+```
+target/debug/validator.exe [absolute path to schema] [absolute path to cityjson file] 
+```
+
+# Web usage
+
+Download [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/).
+
+Then run
+
 ```
 wasm-pack build -t web
 ```
-or 
+for a local `/pkg`, or run 
 ```
 wasm-pack build -t web --out-dir ../cityjson-validator/dist/bin/
 ```
 
-# run 
-```
-validator.exe [absolute path to schema] [absolute path to cityjson file] 
-```
+Then run it like we do [here](https://github.com/josfeenstra/cityjson-validator).
