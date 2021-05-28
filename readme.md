@@ -1,12 +1,6 @@
-# dry-cityjson-validator 
+# cityjson-validator-rs 
 
 A pure rust implementation of a (city) json validator.
-
-## considerations
-
-- Code should be able to run both from wasm, and 'on dry land' using the normal cli.
-- I am very new to rust, so i'm trying to do this 'by the book' as much as possible.
-
 
 # build 
 ```
@@ -18,7 +12,7 @@ wasm-pack build -t web
 ```
 or 
 ```
-wasm-pack build -t web --out-dir ../cityjson-validator/bin/
+wasm-pack build -t web --out-dir ../cityjson-validator/dist/bin/
 ```
 
 # run 

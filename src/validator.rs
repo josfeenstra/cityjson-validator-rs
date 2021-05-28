@@ -45,8 +45,6 @@ impl CityJsonValidator {
         Self {schema}
     }
 
-
-
     pub fn validate(&self, instance: &Json) -> bool {
         println!("validating...");
         // first, check the schema, and immediately abort if the json instance fails to comply
