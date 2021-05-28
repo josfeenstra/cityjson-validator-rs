@@ -25,6 +25,13 @@ pub struct CityJsonValidator {
 // wasm public 
 #[wasm_bindgen] // TODO optional
 impl CityJsonValidator {
+
+    pub fn new_from_string(schema_string: &str) -> Self {
+        println!("converting jsons...");
+        let schema = CityJsonValidator::str_to_json(schema_string);
+        return Self::new(schema);
+    }
+
     pub fn validate_from_str(&self, instance_string: &str) -> bool {
         let json = &CityJsonValidator::str_to_json(instance_string);
         return self.validate(json);
@@ -38,11 +45,7 @@ impl CityJsonValidator {
         Self {schema}
     }
 
-    pub fn from_strings(schema_string: &str) -> Self {
-        println!("converting jsons...");
-        let schema = CityJsonValidator::str_to_json(schema_string);
-        return Self::new(schema);
-    }
+
 
     pub fn validate(&self, instance: &Json) -> bool {
         println!("validating...");

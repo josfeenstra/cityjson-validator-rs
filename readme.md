@@ -2,11 +2,6 @@
 
 A pure rust implementation of a (city) json validator.
 
-
-
-
-
-
 ## considerations
 
 - Code should be able to run both from wasm, and 'on dry land' using the normal cli.
@@ -20,6 +15,10 @@ cargo build
 or
 ```
 wasm-pack build -t web
+```
+or 
+```
+wasm-pack build -t web --out-dir ../cityjson-validator/bin/
 ```
 
 # run 
