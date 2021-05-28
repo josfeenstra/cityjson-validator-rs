@@ -1,2 +1,8 @@
+# cargo build result
 /target
-run.cmd
+
+# wasm-pack result
+/pkg  
+
+# vs code
+.vscode 
