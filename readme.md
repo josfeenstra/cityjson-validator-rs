@@ -13,9 +13,16 @@ A pure rust implementation of a (city) json validator.
 - I am very new to rust, so i'm trying to do this 'by the book' as much as possible.
 
 
-## run 
+# build 
+```
+cargo build
+```
+or
+```
+wasm-pack build -t web
 ```
 
-validator.exe [absolute path to schema] [absolute path to cityjson file]
-
+# run 
+```
+validator.exe [absolute path to schema] [absolute path to cityjson file] 
 ```

@@ -9,12 +9,26 @@
 extern crate serde_json;
 extern crate jsonschema;
 
+
+use wasm_bindgen::prelude::*; // TODO : #[optional]
+
 use serde_json::{Value as Json};
 use jsonschema::{JSONSchema, paths::JSONPointer};
 use std::collections::HashMap;
 
+// TODO : #[optional wasm_bindgen]
+#[wasm_bindgen] // TODO optional
 pub struct CityJsonValidator {
     schema: Json,
+}
+
+// wasm public 
+#[wasm_bindgen] // TODO optional
+impl CityJsonValidator {
+    pub fn validate_from_str(&self, instance_string: &str) -> bool {
+        let json = &CityJsonValidator::str_to_json(instance_string);
+        return self.validate(json);
+    }
 }
 
 // public
@@ -28,11 +42,6 @@ impl CityJsonValidator {
         println!("converting jsons...");
         let schema = CityJsonValidator::str_to_json(schema_string);
         return Self::new(schema);
-    }
-
-    pub fn validate_from_str(&self, instance_string: &str) -> bool {
-        let json = &CityJsonValidator::str_to_json(instance_string);
-        return self.validate(json);
     }
 
     pub fn validate(&self, instance: &Json) -> bool {
