@@ -39,3 +39,11 @@ wasm-pack build -t web --out-dir ../cityjson-validator/dist/bin/
 ```
 
 Then run it like we do [here](https://github.com/josfeenstra/cityjson-validator).
+
+
+Credits
+-------
+
+- Written as a GEO5010 research project for the Msc Geomatics @ Tu Delft 
+
+
