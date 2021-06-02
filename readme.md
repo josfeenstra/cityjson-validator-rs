@@ -44,7 +44,7 @@ wasm-pack build -t web
 ```
 for a local `/pkg`, or run 
 ```
-wasm-pack build -t web --out-dir ../cityjson-validator/dist/bin/
+wasm-pack build -t web --out-dir ../cityjson-validator/docs/bin/
 ```
 
 Then run it like we do [here](https://github.com/josfeenstra/cityjson-validator).

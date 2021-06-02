@@ -16,7 +16,7 @@ fn run(config: Config) {
     let schema = fs::read_to_string(config.schema_path)
         .expect("coudn't read schema");
 
-    let mut validator = cityjson_validator::CityJsonValidator::new_from_string(schema.as_str());
+    let validator = cityjson_validator::CityJsonValidator::new_from_string(schema.as_str());
     validator.validate_from_str(json.as_str());
 }
 

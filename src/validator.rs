@@ -4,11 +4,12 @@
 // NOTE:    for now, Initialize a `Validator` using both the full schema & full instance.
 // TODO: in the future, initialize `Validator` using only the schema, which is then able to validate mulitple different cityjson's, potentially. 
 //          - I did not make that initialy, because converting a string to a serde json object is expensive, so it makes sense to do that once during initialization 
-//          
+//  
+// TODO     add some logging mechanism, to not only print the errors in the console, but also give those error messages to a potential web environment...        
 
 extern crate serde_json;
 extern crate jsonschema;
-
+extern crate web_sys;
 
 use wasm_bindgen::prelude::*; // TODO : #[optional]
 
@@ -16,11 +17,28 @@ use serde_json::{Value as Json};
 use jsonschema::{JSONSchema, paths::JSONPointer};
 use std::{collections::HashMap, str::FromStr};
 
+
+// A macro to provide `println!(..)`-style syntax for `console.log` logging.
+macro_rules! log {
+    ( $( $t:tt )* ) => {
+        if cfg!(target_arch = "wasm32") {
+            web_sys::console::log_1(&format!( $( $t )* ).into());
+        }
+    }
+}
+
+macro_rules! plog {
+    ( $( $t:tt )* ) => {
+        log!($( $t )*);
+        println!($( $t )* );
+    }
+}
+
+
 // TODO : #[optional wasm_bindgen]
 #[wasm_bindgen] // TODO optional
 pub struct CityJsonValidator {
     schema: Json,
-    logs: Vec<String>,
 }
 
 // wasm public 
@@ -33,7 +51,7 @@ impl CityJsonValidator {
         return Self::new(schema);
     }
 
-    pub fn validate_from_str(&mut self, instance_string: &str) -> bool {
+    pub fn validate_from_str(&self, instance_string: &str) -> bool {
         let json = &CityJsonValidator::str_to_json(instance_string);
         return self.validate(json);
     }
@@ -49,33 +67,33 @@ impl CityJsonValidator {
 
     pub fn new(schema: Json) -> Self {
         let errors: Vec<String> = Vec::new();
-        Self {schema, logs: errors}
+        Self {schema}
     }
 
-    pub fn validate(&mut self, instance: &Json) -> bool {
-        println!("validating...");
+    pub fn validate(&self, instance: &Json) -> bool {
+        plog!("validating...");
         // first, check the schema, and immediately abort if the json instance fails to comply
         if self.validate_schema(&instance).is_err() {
-            println!("[BAD] schema not valid!");
+            plog!("[BAD] schema not valid!");
             return false;
         } else {
-            println!("[GOOD] schema valid");
+            plog!("[GOOD] schema valid");
         }
 
         // validate more advanced properties
         if !self.validate_no_duplicate_vertices(&instance) {
-            println!("[BAD] duplicate vertices!");
+            plog!("[BAD] duplicate vertices!");
             return false;
         } else {
-            println!("[GOOD] no duplicate vertices");
+            plog!("[GOOD] no duplicate vertices");
         }
 
         // TODO : add more validators here!
         if !self.validate_hierarchy(&instance) {
-            println!("[BAD] errors in hierarchy!");
+            plog!("[BAD] errors in hierarchy!");
             return false;
         } else {
-            println!("[GOOD] perfect hierarchy");
+            plog!("[GOOD] perfect hierarchy");
         }
 
         // done
@@ -93,13 +111,8 @@ impl CityJsonValidator {
 // private 
 impl CityJsonValidator {
 
-    
-    fn log(&mut self, message: String) {
-        self.logs.push(message);
-    }
-
     // validate json schema using the 'jsonschema' crate
-    fn validate_schema(&mut self, instance: &Json) -> Result<(), &str> {
+    fn validate_schema(&self, instance: &Json) -> Result<(), ()> {
 
         let schema = JSONSchema::compile(&self.schema).unwrap();
         let result = schema.validate(instance);
@@ -110,33 +123,36 @@ impl CityJsonValidator {
             if let Err(errors) = result {
                 for error in errors {
 
-                    println!("Schema Error");
+                    plog!("Schema Error");
 
                     // store the json location where this occured
+                    let strings: Vec<String> = Vec::new();
                     let ptr: JSONPointer = error.instance_path.clone();
-                    print!(" L Location:        : ");
+                    plog!(" L Location:        : ");
                     let vec = ptr.into_vec();
-                    print!("Root"); 
+                    plog!("Root"); 
                     for part in vec.iter() {   
-                        print!(" -> {}", part);
+                        plog!(" -> {}", part);
                     }
-                    println!("");
+                    plog!("");
+
+                    
 
                     // store the type of error. This is a nice rust enum, we could do some nice things with that, 
                     // like more user-friendly error messages & suggestions on how to fix them
                     let _kind = &error.kind;
 
                     // store the error itself 
-                    println!(" L Validation error : {}", error);
+                    plog!(" L Validation error : {}", error);
                 }
             }
-            return Err("Failure");
+            return Err(());
         }
         return Ok(());
     }
 
     // validate some other property
-    fn validate_no_duplicate_vertices(&mut self, instance: &Json) -> bool {
+    fn validate_no_duplicate_vertices(&self, instance: &Json) -> bool {
         let mut valid = true;
         let verts = instance
             .get("vertices").expect("no vertices")
@@ -161,15 +177,20 @@ impl CityJsonValidator {
                 valid = false;
 
                 // feedback
-                println!("Duplicate Vertex Error");
-                println!("  L indices : vertices[{}] == vertices[{}]", other,  i);
-                println!("  L vertex  : [{}, {}, {}]", arr[0], arr[1], arr[2]);
+                plog!("Duplicate Vertex Error");
+                plog!("  L indices : vertices[{}] == vertices[{}]", other,  i);
+                plog!("  L vertex  : [{}, {}, {}]", arr[0], arr[1], arr[2]);
             }
         }
         return valid;
     }
 
-    fn validate_hierarchy(&mut self, instance: &Json) -> bool {
+    // fn concat_vecs(vecs: Vec<String>) -> String {
+    //     let vals = vecs.iter().map(|x| &x[..]);
+    //     let result = vals.collect();
+    // }
+
+    fn validate_hierarchy(&self, instance: &Json) -> bool {
 
         // NOTE: I use unwrap a lot, assuming that the instance has been schema-checked before this step...
         // TODO: is there a way to schema-parse the Json after validation? so that all the unwrapping is not needed anymore? 
@@ -193,9 +214,9 @@ impl CityJsonValidator {
                     
                     if !city_objects.contains_key(p_key) {
                         valid = false;
-                        println!("Invalid Parent Error");
-                        println!("  L object : CityObjects[{}]", key);
-                        println!("  L its parent ({}) does not exist in CityObjects.", p_key);
+                        plog!("Invalid Parent Error");
+                        plog!("  L object : CityObjects[{}]", key);
+                        plog!("  L its parent ({}) does not exist in CityObjects.", p_key);
                         break;
                     } 
                 }
@@ -209,9 +230,9 @@ impl CityJsonValidator {
                     
                     if !city_objects.contains_key(c_key) {
                         valid = false;
-                        println!("Invalid Child Error");
-                        println!("  L object : CityObjects[{}]", key);
-                        println!("  L its child ({}) does not exist in CityObjects.", c_key);
+                        plog!("Invalid Child Error");
+                        plog!("  L object : CityObjects[{}]", key);
+                        plog!("  L its child ({}) does not exist in CityObjects.", c_key);
                         break;
                     } 
                 }
@@ -238,10 +259,10 @@ impl CityJsonValidator {
                     
                     let parent = city_objects.get(p_key).unwrap().as_object().unwrap();
                     if !parent.contains_key("children") {
-                        println!("Invalid Parent Logic Error");
-                        println!("  L object : CityObjects[{}]", key);
-                        println!("  L its parent ({}) does not have 'object' as child.", &p_key);
-                        println!("  L it has no childen at all in fact...");
+                        plog!("Invalid Parent Logic Error");
+                        plog!("  L object : CityObjects[{}]", key);
+                        plog!("  L its parent ({}) does not have 'object' as child.", &p_key);
+                        plog!("  L it has no childen at all in fact...");
                         break;
                     }
                     
@@ -254,10 +275,10 @@ impl CityJsonValidator {
 
                     // now check if it contains
                     if !parent_children.contains(&&key[..]) {
-                        println!("Invalid Parent Logic Error");
-                        println!("  L object : CityObjects[{}]", key);
-                        println!("  L its parent ({}) does not have 'object' as its child.", &p_key);
-                        // println!("  L instead it has: {}", parent_children); 
+                        plog!("Invalid Parent Logic Error");
+                        plog!("  L object : CityObjects[{}]", key);
+                        plog!("  L its parent ({}) does not have 'object' as its child.", &p_key);
+                        plog!("  L instead it has: {:?}", parent_children); 
                     }
                 }
             }
@@ -270,10 +291,10 @@ impl CityJsonValidator {
                     
                     let child = city_objects.get(c_key).unwrap().as_object().unwrap();
                     if !child.contains_key("parents") {
-                        println!("Invalid Child Logic Error");
-                        println!("  L object : CityObjects[{}]", key);
-                        println!("  L its child ({}) does not have 'object' as parent.", &c_key);
-                        println!("  L it has no parents at all in fact...");
+                        plog!("Invalid Child Logic Error");
+                        plog!("  L object : CityObjects[{}]", key);
+                        plog!("  L its child ({}) does not have 'object' as parent.", &c_key);
+                        plog!("  L it has no parents at all in fact...");
                         break;
                     }
                     
@@ -286,10 +307,10 @@ impl CityJsonValidator {
 
                     // now check if it contains
                     if !child_parents.contains(&&key[..]) {
-                        println!("Invalid Child Logic Error");
-                        println!("  L object : CityObjects[{}]", key);
-                        println!("  L its child ({}) does not have 'object' as its parent.", &c_key);
-                        // println!("  L instead it has: {}", child_parents); 
+                        plog!("Invalid Child Logic Error");
+                        plog!("  L object : CityObjects[{}]", key);
+                        plog!("  L its child ({}) does not have 'object' as its parent.", &c_key);
+                        plog!("  L instead it has: {:?}", child_parents); 
                     }
                 }
             }
