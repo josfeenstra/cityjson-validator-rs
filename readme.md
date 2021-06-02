@@ -3,12 +3,21 @@
 A cli tool which validates a cityjson file according to a schema, and certain other properties
 
 
-# properties the validator tests againts
-- [X] json schema
-- [X] Duplicate vertices
-- [ ] Duplicate names (hashes)
-- [ ] Proper building hierarchies
-- [ ] ...
+
+# properties the validator tests against
+
+- [X] The cityjson must match the 1.0.2 [cityjson-schema](https://www.cityjson.org/specs/overview/) 
+- [X] Vertices cannot be duplicate 
+- [X] Proper building hierarchies
+   - [X] 1st level city objects cannot have parents -> schema should take care of this 
+      - [X] if they have children, they must exist
+   - [X] 2nd level city objects must have at least 1 parent -> schema should take care of this
+      - [X] this parent must exist
+   - [X] parent-child relationships must be mutual (parent pointing to child, child pointing to parent)
+- [ ] no duplicate keys in general
+   - [ ] names (hashes) cannot be duplicate
+
+
 
 # Install 
 

@@ -14,12 +14,13 @@ use wasm_bindgen::prelude::*; // TODO : #[optional]
 
 use serde_json::{Value as Json};
 use jsonschema::{JSONSchema, paths::JSONPointer};
-use std::collections::HashMap;
+use std::{collections::HashMap, str::FromStr};
 
 // TODO : #[optional wasm_bindgen]
 #[wasm_bindgen] // TODO optional
 pub struct CityJsonValidator {
     schema: Json,
+    logs: Vec<String>,
 }
 
 // wasm public 
@@ -32,9 +33,14 @@ impl CityJsonValidator {
         return Self::new(schema);
     }
 
-    pub fn validate_from_str(&self, instance_string: &str) -> bool {
+    pub fn validate_from_str(&mut self, instance_string: &str) -> bool {
         let json = &CityJsonValidator::str_to_json(instance_string);
         return self.validate(json);
+    }
+
+    pub fn get_errors() -> String {
+        let string = String::from_str("henkiepenkie").unwrap();
+        return string;
     }
 }
 
@@ -42,10 +48,11 @@ impl CityJsonValidator {
 impl CityJsonValidator {
 
     pub fn new(schema: Json) -> Self {
-        Self {schema}
+        let errors: Vec<String> = Vec::new();
+        Self {schema, logs: errors}
     }
 
-    pub fn validate(&self, instance: &Json) -> bool {
+    pub fn validate(&mut self, instance: &Json) -> bool {
         println!("validating...");
         // first, check the schema, and immediately abort if the json instance fails to comply
         if self.validate_schema(&instance).is_err() {
@@ -64,7 +71,12 @@ impl CityJsonValidator {
         }
 
         // TODO : add more validators here!
-        self.validate_some_other_property(&instance);
+        if !self.validate_hierarchy(&instance) {
+            println!("[BAD] errors in hierarchy!");
+            return false;
+        } else {
+            println!("[GOOD] perfect hierarchy");
+        }
 
         // done
         return true;
@@ -81,8 +93,13 @@ impl CityJsonValidator {
 // private 
 impl CityJsonValidator {
 
+    
+    fn log(&mut self, message: String) {
+        self.logs.push(message);
+    }
+
     // validate json schema using the 'jsonschema' crate
-    fn validate_schema(&self, instance: &Json) -> Result<(), &str> {
+    fn validate_schema(&mut self, instance: &Json) -> Result<(), &str> {
 
         let schema = JSONSchema::compile(&self.schema).unwrap();
         let result = schema.validate(instance);
@@ -93,7 +110,7 @@ impl CityJsonValidator {
             if let Err(errors) = result {
                 for error in errors {
 
-                    println!("Schema Error ");
+                    println!("Schema Error");
 
                     // store the json location where this occured
                     let ptr: JSONPointer = error.instance_path.clone();
@@ -119,13 +136,11 @@ impl CityJsonValidator {
     }
 
     // validate some other property
-    fn validate_no_duplicate_vertices(&self, instance: &Json) -> bool {
+    fn validate_no_duplicate_vertices(&mut self, instance: &Json) -> bool {
         let mut valid = true;
         let verts = instance
-            .get("vertices")
-            .expect("no vertices")
-            .as_array()
-            .expect("not an array");
+            .get("vertices").expect("no vertices")
+            .as_array().expect("not an array");
 
         // use all vertices as keys in a hashmap
         let mut uniques = HashMap::new();
@@ -146,7 +161,7 @@ impl CityJsonValidator {
                 valid = false;
 
                 // feedback
-                println!("Duplicate Vertex Error ");
+                println!("Duplicate Vertex Error");
                 println!("  L indices : vertices[{}] == vertices[{}]", other,  i);
                 println!("  L vertex  : [{}, {}, {}]", arr[0], arr[1], arr[2]);
             }
@@ -154,12 +169,137 @@ impl CityJsonValidator {
         return valid;
     }
 
-    fn validate_some_other_property(&self, instance: &Json) -> bool {
-        return true;
+    fn validate_hierarchy(&mut self, instance: &Json) -> bool {
+
+        // NOTE: I use unwrap a lot, assuming that the instance has been schema-checked before this step...
+        // TODO: is there a way to schema-parse the Json after validation? so that all the unwrapping is not needed anymore? 
+        //       seen some nice stuff here : https://docs.serde.rs/serde_json/
+
+        let mut valid = true;
+        let city_objects = instance
+            .get("CityObjects").unwrap()
+            .as_object().unwrap();
+        
+        for key in city_objects.keys() {
+            let object = city_objects
+                .get(key).unwrap()
+                .as_object().unwrap();
+            
+            // check is parents exist
+            if object.contains_key("parents") {
+                let parents = object.get("parents").unwrap().as_array().unwrap();
+                for p_raw in parents {
+                    let p_key = p_raw.as_str().unwrap();
+                    
+                    if !city_objects.contains_key(p_key) {
+                        valid = false;
+                        println!("Invalid Parent Error");
+                        println!("  L object : CityObjects[{}]", key);
+                        println!("  L its parent ({}) does not exist in CityObjects.", p_key);
+                        break;
+                    } 
+                }
+            }
+
+            // check is children exist 
+            if object.contains_key("children") {
+                let children = object.get("children").unwrap().as_array().unwrap();
+                for c in children {
+                    let c_key = c.as_str().unwrap();
+                    
+                    if !city_objects.contains_key(c_key) {
+                        valid = false;
+                        println!("Invalid Child Error");
+                        println!("  L object : CityObjects[{}]", key);
+                        println!("  L its child ({}) does not exist in CityObjects.", c_key);
+                        break;
+                    } 
+                }
+            }
+        }
+
+        // quit if parent or child errors 
+        if !valid {
+            return valid;
+        }
+
+        // now that we know all parents & children are valid,
+        //  we can do the many-to-many doublly linked list check.
+        // (otherwise, we would have to double check if children / parents exist...)
+        for key in city_objects.keys() {
+            let object = city_objects
+                .get(key).unwrap()
+                .as_object().unwrap();
+
+            if object.contains_key("parents") {
+                let parents = object.get("parents").unwrap().as_array().unwrap();
+                for c in parents {
+                    let p_key = c.as_str().unwrap();
+                    
+                    let parent = city_objects.get(p_key).unwrap().as_object().unwrap();
+                    if !parent.contains_key("children") {
+                        println!("Invalid Parent Logic Error");
+                        println!("  L object : CityObjects[{}]", key);
+                        println!("  L its parent ({}) does not have 'object' as child.", &p_key);
+                        println!("  L it has no childen at all in fact...");
+                        break;
+                    }
+                    
+                    // make parents array usable first...
+                    let pcs_raw = parent.get("children").unwrap().as_array().unwrap();
+                    let mut parent_children = vec![""; pcs_raw.len()];
+                    for i in 0..pcs_raw.len() {
+                        parent_children[i] = pcs_raw[i].as_str().unwrap();
+                    }
+
+                    // now check if it contains
+                    if !parent_children.contains(&&key[..]) {
+                        println!("Invalid Parent Logic Error");
+                        println!("  L object : CityObjects[{}]", key);
+                        println!("  L its parent ({}) does not have 'object' as its child.", &p_key);
+                        // println!("  L instead it has: {}", parent_children); 
+                    }
+                }
+            }
+
+            // check if chilren point back to this object
+            if object.contains_key("children") {
+                let children = object.get("children").unwrap().as_array().unwrap();
+                for c in children {
+                    let c_key = c.as_str().unwrap();
+                    
+                    let child = city_objects.get(c_key).unwrap().as_object().unwrap();
+                    if !child.contains_key("parents") {
+                        println!("Invalid Child Logic Error");
+                        println!("  L object : CityObjects[{}]", key);
+                        println!("  L its child ({}) does not have 'object' as parent.", &c_key);
+                        println!("  L it has no parents at all in fact...");
+                        break;
+                    }
+                    
+                    // make parents array usable first...
+                    let cps_raw = child.get("parents").unwrap().as_array().unwrap();
+                    let mut child_parents = vec![""; cps_raw.len()];
+                    for i in 0..cps_raw.len() {
+                        child_parents[i] = cps_raw[i].as_str().unwrap();
+                    }
+
+                    // now check if it contains
+                    if !child_parents.contains(&&key[..]) {
+                        println!("Invalid Child Logic Error");
+                        println!("  L object : CityObjects[{}]", key);
+                        println!("  L its child ({}) does not have 'object' as its parent.", &c_key);
+                        // println!("  L instead it has: {}", child_parents); 
+                    }
+                }
+            }
+        } 
+        
+        return valid;
     }
 }
 
-// optional / not needed
+// sketchbook, delete when done
 impl CityJsonValidator {
 
     // a 'cheat sheet', to figure out how to iterate jsons within rust. 
@@ -191,5 +331,13 @@ impl CityJsonValidator {
             }
             println!("");
         }
+    }
+
+    fn _test_syntax(&self, instance: &Json) -> bool {
+        
+        // aha... this is how you do the less verbose thing...
+        let obs = &instance["CityObjects"];
+
+        return true;
     }
 }
