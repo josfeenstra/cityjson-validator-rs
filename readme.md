@@ -1,4 +1,4 @@
-# cityjson-validator-rs 
+# cityjson-validator-rust
 
 A cli tool which validates a cityjson file according to a schema, and certain other properties
 
@@ -22,7 +22,7 @@ A cli tool which validates a cityjson file according to a schema, and certain ot
 # Install 
 
 ```
-git clone https://github.com/josfeenstra/cityjson-validator-rs
+git clone https://github.com/josfeenstra/cj-val-rs
 cd cityjson-validator-rs
 cargo build
 ```
@@ -47,7 +47,7 @@ for a local `/pkg`, or run
 wasm-pack build -t web --out-dir ../cityjson-validator/docs/bin/
 ```
 
-Then run it like we do [here](https://github.com/josfeenstra/cityjson-validator).
+Then run it like we do [here](https://github.com/josfeenstra/cj-val).
 
 
 Credits
