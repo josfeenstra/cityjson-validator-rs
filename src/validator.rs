@@ -18,19 +18,21 @@ use jsonschema::{JSONSchema, paths::JSONPointer};
 use std::{collections::HashMap, str::FromStr};
 
 
-// A macro to provide `println!(..)`-style syntax for `console.log` logging.
+// logging to the javascript / web console
 macro_rules! log {
-    ( $( $t:tt )* ) => {
-        if cfg!(target_arch = "wasm32") {
-            web_sys::console::log_1(&format!( $( $t )* ).into());
-        }
+    ( $( $t:tt )* ) => {    
+       web_sys::console::log_1(&format!( $( $t )* ).into());
     }
 }
 
+// print & log, plus, plog sounds funny
 macro_rules! plog {
     ( $( $t:tt )* ) => {
-        log!($( $t )*);
-        println!($( $t )* );
+        if cfg!(target_arch = "wasm32") {
+            log!($( $t )*);
+        } else {
+            println!($( $t )* );
+        }
     }
 }
 
@@ -259,6 +261,7 @@ impl CityJsonValidator {
                     
                     let parent = city_objects.get(p_key).unwrap().as_object().unwrap();
                     if !parent.contains_key("children") {
+                        valid = false;
                         plog!("Invalid Parent Logic Error");
                         plog!("  L object : CityObjects[{}]", key);
                         plog!("  L its parent ({}) does not have 'object' as child.", &p_key);
@@ -275,6 +278,7 @@ impl CityJsonValidator {
 
                     // now check if it contains
                     if !parent_children.contains(&&key[..]) {
+                        valid = false;
                         plog!("Invalid Parent Logic Error");
                         plog!("  L object : CityObjects[{}]", key);
                         plog!("  L its parent ({}) does not have 'object' as its child.", &p_key);
@@ -291,6 +295,7 @@ impl CityJsonValidator {
                     
                     let child = city_objects.get(c_key).unwrap().as_object().unwrap();
                     if !child.contains_key("parents") {
+                        valid = false;
                         plog!("Invalid Child Logic Error");
                         plog!("  L object : CityObjects[{}]", key);
                         plog!("  L its child ({}) does not have 'object' as parent.", &c_key);
@@ -307,6 +312,7 @@ impl CityJsonValidator {
 
                     // now check if it contains
                     if !child_parents.contains(&&key[..]) {
+                        valid = false;
                         plog!("Invalid Child Logic Error");
                         plog!("  L object : CityObjects[{}]", key);
                         plog!("  L its child ({}) does not have 'object' as its parent.", &c_key);
