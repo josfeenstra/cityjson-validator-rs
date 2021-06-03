@@ -76,26 +76,26 @@ impl CityJsonValidator {
         plog!("validating...");
         // first, check the schema, and immediately abort if the json instance fails to comply
         if self.validate_schema(&instance).is_err() {
-            plog!("[BAD] schema not valid!");
+            plog!("\n[BAD] schema not valid!");
             return false;
         } else {
-            plog!("[GOOD] schema valid");
+            plog!("\n[GOOD] schema valid");
         }
 
         // validate more advanced properties
         if !self.validate_no_duplicate_vertices(&instance) {
-            plog!("[BAD] duplicate vertices!");
+            plog!("\n[BAD] duplicate vertices!");
             return false;
         } else {
-            plog!("[GOOD] no duplicate vertices");
+            plog!("\n[GOOD] no duplicate vertices");
         }
 
         // TODO : add more validators here!
         if !self.validate_hierarchy(&instance) {
-            plog!("[BAD] errors in hierarchy!");
+            plog!("\n[BAD] errors in hierarchy!");
             return false;
         } else {
-            plog!("[GOOD] perfect hierarchy");
+            plog!("\n[GOOD] perfect hierarchy");
         }
 
         // done
