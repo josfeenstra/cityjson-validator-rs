@@ -125,7 +125,7 @@ impl CityJsonValidator {
             if let Err(errors) = result {
                 for error in errors {
 
-                    plog!("Schema Error");
+                    plog!("\nSchema Error");
 
                     // store the json location where this occured
                     let strings: Vec<String> = Vec::new();
@@ -136,7 +136,7 @@ impl CityJsonValidator {
                     for part in vec.iter() {   
                         plog!(" -> {}", part);
                     }
-                    plog!("");
+                    // plog!("");
 
                     
 
@@ -179,7 +179,7 @@ impl CityJsonValidator {
                 valid = false;
 
                 // feedback
-                plog!("Duplicate Vertex Error");
+                plog!("\nDuplicate Vertex Error");
                 plog!("  L indices : vertices[{}] == vertices[{}]", other,  i);
                 plog!("  L vertex  : [{}, {}, {}]", arr[0], arr[1], arr[2]);
             }
@@ -216,7 +216,7 @@ impl CityJsonValidator {
                     
                     if !city_objects.contains_key(p_key) {
                         valid = false;
-                        plog!("Invalid Parent Error");
+                        plog!("\nInvalid Parent Error");
                         plog!("  L object : CityObjects[{}]", key);
                         plog!("  L its parent ({}) does not exist in CityObjects.", p_key);
                         break;
@@ -232,7 +232,7 @@ impl CityJsonValidator {
                     
                     if !city_objects.contains_key(c_key) {
                         valid = false;
-                        plog!("Invalid Child Error");
+                        plog!("\nInvalid Child Error");
                         plog!("  L object : CityObjects[{}]", key);
                         plog!("  L its child ({}) does not exist in CityObjects.", c_key);
                         break;
@@ -262,7 +262,7 @@ impl CityJsonValidator {
                     let parent = city_objects.get(p_key).unwrap().as_object().unwrap();
                     if !parent.contains_key("children") {
                         valid = false;
-                        plog!("Invalid Parent Logic Error");
+                        plog!("\nInvalid Parent Logic Error");
                         plog!("  L object : CityObjects[{}]", key);
                         plog!("  L its parent ({}) does not have 'object' as child.", &p_key);
                         plog!("  L it has no childen at all in fact...");
@@ -279,7 +279,7 @@ impl CityJsonValidator {
                     // now check if it contains
                     if !parent_children.contains(&&key[..]) {
                         valid = false;
-                        plog!("Invalid Parent Logic Error");
+                        plog!("\nInvalid Parent Logic Error");
                         plog!("  L object : CityObjects[{}]", key);
                         plog!("  L its parent ({}) does not have 'object' as its child.", &p_key);
                         plog!("  L instead it has: {:?}", parent_children); 
@@ -296,7 +296,7 @@ impl CityJsonValidator {
                     let child = city_objects.get(c_key).unwrap().as_object().unwrap();
                     if !child.contains_key("parents") {
                         valid = false;
-                        plog!("Invalid Child Logic Error");
+                        plog!("\nInvalid Child Logic Error");
                         plog!("  L object : CityObjects[{}]", key);
                         plog!("  L its child ({}) does not have 'object' as parent.", &c_key);
                         plog!("  L it has no parents at all in fact...");
@@ -313,7 +313,7 @@ impl CityJsonValidator {
                     // now check if it contains
                     if !child_parents.contains(&&key[..]) {
                         valid = false;
-                        plog!("Invalid Child Logic Error");
+                        plog!("\nInvalid Child Logic Error");
                         plog!("  L object : CityObjects[{}]", key);
                         plog!("  L its child ({}) does not have 'object' as its parent.", &c_key);
                         plog!("  L instead it has: {:?}", child_parents); 
