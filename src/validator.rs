@@ -125,6 +125,7 @@ impl CityJsonValidator {
             if let Err(errors) = result {
                 for error in errors {
 
+                    plog!("");
                     plog!("\nSchema Error");
 
                     // store the json location where this occured
@@ -179,6 +180,7 @@ impl CityJsonValidator {
                 valid = false;
 
                 // feedback
+                plog!("");
                 plog!("\nDuplicate Vertex Error");
                 plog!("  L indices : vertices[{}] == vertices[{}]", other,  i);
                 plog!("  L vertex  : [{}, {}, {}]", arr[0], arr[1], arr[2]);
@@ -216,6 +218,7 @@ impl CityJsonValidator {
                     
                     if !city_objects.contains_key(p_key) {
                         valid = false;
+                        plog!("");
                         plog!("\nInvalid Parent Error");
                         plog!("  L object : CityObjects[{}]", key);
                         plog!("  L its parent ({}) does not exist in CityObjects.", p_key);
@@ -232,6 +235,7 @@ impl CityJsonValidator {
                     
                     if !city_objects.contains_key(c_key) {
                         valid = false;
+                        plog!("");
                         plog!("\nInvalid Child Error");
                         plog!("  L object : CityObjects[{}]", key);
                         plog!("  L its child ({}) does not exist in CityObjects.", c_key);
@@ -262,6 +266,7 @@ impl CityJsonValidator {
                     let parent = city_objects.get(p_key).unwrap().as_object().unwrap();
                     if !parent.contains_key("children") {
                         valid = false;
+                        plog!("");
                         plog!("\nInvalid Parent Logic Error");
                         plog!("  L object : CityObjects[{}]", key);
                         plog!("  L its parent ({}) does not have 'object' as child.", &p_key);
@@ -279,6 +284,7 @@ impl CityJsonValidator {
                     // now check if it contains
                     if !parent_children.contains(&&key[..]) {
                         valid = false;
+                        plog!("");
                         plog!("\nInvalid Parent Logic Error");
                         plog!("  L object : CityObjects[{}]", key);
                         plog!("  L its parent ({}) does not have 'object' as its child.", &p_key);
@@ -296,6 +302,7 @@ impl CityJsonValidator {
                     let child = city_objects.get(c_key).unwrap().as_object().unwrap();
                     if !child.contains_key("parents") {
                         valid = false;
+                        plog!("");
                         plog!("\nInvalid Child Logic Error");
                         plog!("  L object : CityObjects[{}]", key);
                         plog!("  L its child ({}) does not have 'object' as parent.", &c_key);
@@ -313,6 +320,7 @@ impl CityJsonValidator {
                     // now check if it contains
                     if !child_parents.contains(&&key[..]) {
                         valid = false;
+                        plog!("");
                         plog!("\nInvalid Child Logic Error");
                         plog!("  L object : CityObjects[{}]", key);
                         plog!("  L its child ({}) does not have 'object' as its parent.", &c_key);
