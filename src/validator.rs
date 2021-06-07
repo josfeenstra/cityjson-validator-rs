@@ -165,11 +165,11 @@ impl CityJsonValidator {
         let mut uniques = HashMap::new();
         for i in 0..verts.len() {
             let vert = verts[i].as_array().unwrap();
-            
+          
             let arr = [
-                vert[0].as_i64().unwrap(),
-                vert[1].as_i64().unwrap(),
-                vert[2].as_i64().unwrap(),
+                vert[0].to_string(),
+                vert[1].to_string(),
+                vert[2].to_string()
             ];
             
             if !uniques.contains_key(&arr) {
