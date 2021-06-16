@@ -25,7 +25,7 @@ macro_rules! log {
     }
 }
 
-// print & log, plus, plog sounds funny
+/// print & log.
 macro_rules! plog {
     ( $( $t:tt )* ) => {
         if cfg!(target_arch = "wasm32") {
@@ -58,6 +58,10 @@ impl CityJsonValidator {
         return self.validate(json);
     }
 
+    
+    /// TODO: this would spit out the gathered errors in an ideal world. 
+    ///
+    /// [JF]: Haven't done it yet, since rust's borrow checker doesnt like it if I gather errors during non-mutable function calls. 
     pub fn get_errors() -> String {
         let string = String::from_str("henkiepenkie").unwrap();
         return string;
@@ -68,12 +72,14 @@ impl CityJsonValidator {
 impl CityJsonValidator {
 
     pub fn new(schema: Json) -> Self {
-        let errors: Vec<String> = Vec::new();
+        // let errors: Vec<String> = Vec::new();
         Self {schema}
     }
 
     pub fn validate(&self, instance: &Json) -> bool {
+        
         plog!("validating...");
+        
         // first, check the schema, and immediately abort if the json instance fails to comply
         if self.validate_schema(&instance).is_err() {
             plog!("\n[BAD] schema not valid!");
@@ -82,7 +88,6 @@ impl CityJsonValidator {
             plog!("\n[GOOD] schema valid");
         }
 
-        // validate more advanced properties
         if !self.validate_no_duplicate_vertices(&instance) {
             plog!("\n[BAD] duplicate vertices!");
             return false;
@@ -90,8 +95,7 @@ impl CityJsonValidator {
             plog!("\n[GOOD] no duplicate vertices");
         }
 
-        // TODO : add more validators here!
-        if !self.validate_hierarchy(&instance) {
+        if !self.validate_parent_child(&instance) {
             plog!("\n[BAD] errors in hierarchy!");
             return false;
         } else {
@@ -154,7 +158,7 @@ impl CityJsonValidator {
         return Ok(());
     }
 
-    // validate some other property
+
     fn validate_no_duplicate_vertices(&self, instance: &Json) -> bool {
         let mut valid = true;
         let verts = instance
@@ -194,8 +198,8 @@ impl CityJsonValidator {
     //     let result = vals.collect();
     // }
 
-    fn validate_hierarchy(&self, instance: &Json) -> bool {
-
+    fn validate_parent_child(&self, instance: &Json) -> bool {
+        
         // NOTE: I use unwrap a lot, assuming that the instance has been schema-checked before this step...
         // TODO: is there a way to schema-parse the Json after validation? so that all the unwrapping is not needed anymore? 
         //       seen some nice stuff here : https://docs.serde.rs/serde_json/
