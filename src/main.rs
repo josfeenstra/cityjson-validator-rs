@@ -16,11 +16,21 @@ fn run(config: Config) {
     let schema = fs::read_to_string(config.schema_path)
         .expect("coudn't read schema");
 
-    let validator = cityjson_validator::CityJsonValidator::new_from_string(schema.as_str());
+    let res = cityjson_validator::CityJsonValidator::new_from_string(schema.as_str());
+    let validator = match res {
+        Ok(val) => val,
+        Err(_) => return,
+    };
+
     validator.validate_from_str(json.as_str());
+    return;
 }
 
-
+/// [JF]: Just something the rust book explains... 
+///
+/// Personally, I think this is a bit to much for the scale that we are dealing with...
+///
+/// Still, nice to make to get used to rust error handling
 #[derive(Debug)]
 struct Config {
     json_path: String,

@@ -1,11 +1,6 @@
 // lib.rs
 // AUTHOR:  Jos Feenstra
 // PURPOSE: The core logic of validating a city json. 
-// NOTE:    for now, Initialize a `Validator` using both the full schema & full instance.
-// TODO: in the future, initialize `Validator` using only the schema, which is then able to validate mulitple different cityjson's, potentially. 
-//          - I did not make that initialy, because converting a string to a serde json object is expensive, so it makes sense to do that once during initialization 
-//  
-// TODO     add some logging mechanism, to not only print the errors in the console, but also give those error messages to a potential web environment...        
 
 extern crate serde_json;
 extern crate jsonschema;
@@ -44,18 +39,31 @@ pub struct CityJsonValidator {
 }
 
 // wasm public 
-#[wasm_bindgen] // TODO optional
+#[wasm_bindgen(catch)] // TODO optional
 impl CityJsonValidator {
 
-    pub fn new_from_string(schema_string: &str) -> Self {
-        println!("converting jsons...");
-        let schema = CityJsonValidator::str_to_json(schema_string);
-        return Self::new(schema);
+    pub fn new_from_string(schema_string: &str) -> Result<CityJsonValidator, JsValue> {
+        plog!("deserializing schema...");
+        let res = CityJsonValidator::str_to_json(schema_string);
+        match res {
+            Ok(json) => Ok(Self::new(json)),
+            Err(()) => {
+                plog!(" L This means that the SCHEMA is not a valid json to begin with");
+                Err(JsValue::UNDEFINED)
+            }
+        }
     }
 
     pub fn validate_from_str(&self, instance_string: &str) -> bool {
-        let json = &CityJsonValidator::str_to_json(instance_string);
-        return self.validate(json);
+        plog!("deserializing instance...");
+        let res = &CityJsonValidator::str_to_json(instance_string);
+        match res {
+            Ok(json) => self.validate(json),
+            Err(()) => {
+                plog!(" L This means that the GIVEN JSON is not a valid json to begin with");
+                false
+            }
+        }
     }
 
     
@@ -63,7 +71,7 @@ impl CityJsonValidator {
     ///
     /// [JF]: Haven't done it yet, since rust's borrow checker doesnt like it if I gather errors during non-mutable function calls. 
     pub fn get_errors() -> String {
-        let string = String::from_str("henkiepenkie").unwrap();
+        let string = String::from_str("no internal error storage yet...").unwrap();
         return string;
     }
 }
@@ -107,10 +115,19 @@ impl CityJsonValidator {
     }
 
     // helper function to create a serde json
-    pub fn str_to_json(json_string: &str) -> Json {
+    pub fn str_to_json(json_string: &str) -> Result<Json, ()> {
         // TODO this is already quite fast, but ideally, you would do something with a read buffer
         // no qlueue how to do that in rust yet
-        return serde_json::from_str(json_string).expect("couldnt convert string to json");
+        let res = serde_json::from_str(json_string);
+        match res {
+            Ok(json) => Ok(json),
+            Err(e) => {
+                plog!("[BAD] Could not deserialize json. Reason: ");
+                plog!(" L Reason: ");
+                plog!("   {:?}", e);
+                Err(())
+            }
+        }
     }
 }
 
@@ -185,7 +202,7 @@ impl CityJsonValidator {
 
                 // feedback
                 plog!("");
-                plog!("\nDuplicate Vertex Error");
+                plog!("Duplicate Vertex Error");
                 plog!("  L indices : vertices[{}] == vertices[{}]", other,  i);
                 plog!("  L vertex  : [{}, {}, {}]", arr[0], arr[1], arr[2]);
             }
@@ -223,7 +240,7 @@ impl CityJsonValidator {
                     if !city_objects.contains_key(p_key) {
                         valid = false;
                         plog!("");
-                        plog!("\nInvalid Parent Error");
+                        plog!("Invalid Parent Error");
                         plog!("  L object : CityObjects[{}]", key);
                         plog!("  L its parent ({}) does not exist in CityObjects.", p_key);
                         break;
@@ -240,7 +257,7 @@ impl CityJsonValidator {
                     if !city_objects.contains_key(c_key) {
                         valid = false;
                         plog!("");
-                        plog!("\nInvalid Child Error");
+                        plog!("Invalid Child Error");
                         plog!("  L object : CityObjects[{}]", key);
                         plog!("  L its child ({}) does not exist in CityObjects.", c_key);
                         break;
@@ -271,7 +288,7 @@ impl CityJsonValidator {
                     if !parent.contains_key("children") {
                         valid = false;
                         plog!("");
-                        plog!("\nInvalid Parent Logic Error");
+                        plog!("Invalid Parent Logic Error");
                         plog!("  L object : CityObjects[{}]", key);
                         plog!("  L its parent ({}) does not have 'object' as child.", &p_key);
                         plog!("  L it has no childen at all in fact...");
@@ -289,7 +306,7 @@ impl CityJsonValidator {
                     if !parent_children.contains(&&key[..]) {
                         valid = false;
                         plog!("");
-                        plog!("\nInvalid Parent Logic Error");
+                        plog!("Invalid Parent Logic Error");
                         plog!("  L object : CityObjects[{}]", key);
                         plog!("  L its parent ({}) does not have 'object' as its child.", &p_key);
                         plog!("  L instead it has: {:?}", parent_children); 
@@ -307,7 +324,7 @@ impl CityJsonValidator {
                     if !child.contains_key("parents") {
                         valid = false;
                         plog!("");
-                        plog!("\nInvalid Child Logic Error");
+                        plog!("Invalid Child Logic Error");
                         plog!("  L object : CityObjects[{}]", key);
                         plog!("  L its child ({}) does not have 'object' as parent.", &c_key);
                         plog!("  L it has no parents at all in fact...");
@@ -325,7 +342,7 @@ impl CityJsonValidator {
                     if !child_parents.contains(&&key[..]) {
                         valid = false;
                         plog!("");
-                        plog!("\nInvalid Child Logic Error");
+                        plog!("Invalid Child Logic Error");
                         plog!("  L object : CityObjects[{}]", key);
                         plog!("  L its child ({}) does not have 'object' as its parent.", &c_key);
                         plog!("  L instead it has: {:?}", child_parents); 

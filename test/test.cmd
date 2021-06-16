@@ -1,6 +1,27 @@
 cargo build
 @echo off
 
+@REM Testing error handling for if files are not even jsons
+
+echo ================================================
+echo    TEST A : when using invalid schema
+echo ================================================
+"./target/debug/cityjson-validator.exe" D:\Dev\Geo\data\cityjson\not-a-json.json D:\Dev\Geo\data\cityjson\den-haag-screwed.json
+
+echo ================================================
+echo    TEST B : when using invalid json
+echo ================================================
+"./target/debug/cityjson-validator.exe" D:\Dev\Geo\data\cityjson\schema.json D:\Dev\Geo\data\cityjson\not-a-json.json
+
+echo ================================================
+echo    TEST C : when using a json, but not a cityjson
+echo ================================================
+"./target/debug/cityjson-validator.exe" D:\Dev\Geo\data\cityjson\schema.json D:\Dev\Geo\data\cityjson\not-a-cityjson.json
+
+
+
+
+
 echo ================================================
 echo    TEST 1 : this is supposed to fail on schema
 echo ================================================
