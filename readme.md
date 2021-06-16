@@ -22,7 +22,7 @@ A cli tool which validates a cityjson file according to a schema, and certain ot
 # Install 
 
 ```
-git clone https://github.com/josfeenstra/cj-val-rs
+git clone https://github.com/josfeenstra/cjval-rs
 cd cityjson-validator-rs
 cargo build
 ```
